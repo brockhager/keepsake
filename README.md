@@ -42,6 +42,7 @@ Features will be added slowly and intentionally.
 ## Design Notes
 
 - [v0 Core Data Model](docs/v0-core-data-model.md)
+- [Phased Build Plan](docs/phased-build-plan.md)
 - [Runtime Mode Contract (v0)](docs/runtime-mode-spec.md)
 - [v0 Service Layer Scope](docs/v0-service-layer.md)
 - [v0 Vault Scope](docs/v0-vaults.md)

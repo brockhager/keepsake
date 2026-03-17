@@ -28,6 +28,13 @@
 - State-changing domain operations should use a local SQLite transaction and write an `audit_event`.
 - Keep migrations explicit and reversible. Validate both up and down migrations against populated data when changing the schema.
 
+## Current Phase
+
+- Treat Phase 0 foundation as complete and closed. Do not keep expanding the foundation once the invariant is already enforced.
+- The next safe increment is Phase 1 from `docs/phased-build-plan.md`: at most a tiny CLI or script interface for creating vaults, listing vaults, creating memories in vaults, adding revisions, and viewing history.
+- When implementing Phase 1 work, stay inside `docs/phase-1-cli-checklist.md`. Do not add commands or concepts beyond that checklist unless explicitly requested.
+- Prefer stopping after a phase goal is met instead of building speculative support for later phases.
+
 ## Build And Test
 
 - Run `python -m unittest discover -s tests -v` after Python changes.
