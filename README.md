@@ -39,7 +39,15 @@ The initial focus is on a minimal, trustworthy foundation.
 
 Features will be added slowly and intentionally.
 
+## Design Notes
+
+- [v0 Core Data Model](docs/v0-core-data-model.md)
+- [Runtime Mode Contract (v0)](docs/runtime-mode-spec.md)
+- [v0 Service Layer Scope](docs/v0-service-layer.md)
+- [v0 Vault Scope](docs/v0-vaults.md)
+- [v0 SQLite Migrations](db/migrations/README.md)
+- [Demo Seed Data](db/seeds/README.md)
+
 ## License
 
 Apache License 2.0
-``
