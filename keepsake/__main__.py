@@ -62,6 +62,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     memory_history_parser.add_argument("memory_id")
 
+    memory_list_parser = memory_command_parser.add_parser(
+        "list",
+        add_help=False,
+        allow_abbrev=False,
+    )
+    memory_list_parser.add_argument("--vault", dest="vault_id")
+
     args = parser.parse_args(argv)
     profile = resolve_runtime_profile("personal")
 
@@ -181,6 +188,79 @@ def main(argv: list[str] | None = None) -> int:
             print(f"memory_id: {revised['memory_id']}")
             print(f"revision_number: {revised['revision_number']}")
             print(f"created_at: {row['created_at']}")
+            return 0
+
+        if args.command_group == "memory" and args.command_name == "list":
+            connection = connect_for_profile(profile)
+            try:
+                if args.vault_id is not None:
+                    vault_row = connection.execute(
+                        """
+                        SELECT id, name
+                        FROM vault
+                        WHERE id = ? AND owner_id = ?
+                        """,
+                        (args.vault_id, PERSONAL_OWNER_ID),
+                    ).fetchone()
+
+                    if vault_row is None:
+                        raise ValueError(f"vault not found: {args.vault_id}")
+
+                    rows = connection.execute(
+                        """
+                        SELECT
+                          memory_id,
+                          current_title,
+                          vault_id,
+                          vault_name,
+                          current_revision_number,
+                          current_revision_created_at
+                        FROM memory_current_view
+                        WHERE owner_id = ? AND vault_id = ?
+                        ORDER BY current_revision_created_at DESC, memory_created_at DESC, memory_id ASC
+                        """,
+                        (PERSONAL_OWNER_ID, args.vault_id),
+                    ).fetchall()
+
+                    if not rows:
+                        print(f"no memories found in vault: {vault_row['name']}")
+                        return 0
+                else:
+                    rows = connection.execute(
+                        """
+                        SELECT
+                          memory_id,
+                          current_title,
+                          vault_id,
+                          vault_name,
+                          current_revision_number,
+                          current_revision_created_at
+                        FROM memory_current_view
+                        WHERE owner_id = ?
+                        ORDER BY current_revision_created_at DESC, memory_created_at DESC, memory_id ASC
+                        """,
+                        (PERSONAL_OWNER_ID,),
+                    ).fetchall()
+
+                    if not rows:
+                        print("no memories found")
+                        return 0
+            finally:
+                connection.close()
+
+            for row in rows:
+                print(
+                    " | ".join(
+                        [
+                            f"memory_id: {row['memory_id']}",
+                            f"title: {row['current_title']}",
+                            f"vault_id: {row['vault_id']}",
+                            f"vault_name: {row['vault_name']}",
+                            f"revision_number: {row['current_revision_number']}",
+                            f"last_revised_at: {row['current_revision_created_at']}",
+                        ]
+                    )
+                )
             return 0
 
         if args.command_group == "memory" and args.command_name == "show":

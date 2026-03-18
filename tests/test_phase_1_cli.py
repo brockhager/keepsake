@@ -124,6 +124,80 @@ class Phase1CliTests(unittest.TestCase):
 
         self.assertFalse((self._temp_home / ".keepsake" / "demo").exists())
 
+    def test_memory_list_global_and_by_vault(self) -> None:
+        self._prepare_personal_profile()
+
+        family_vault = self._run_cli("vault", "create", "Family")
+        self.assertEqual(family_vault.returncode, 0, msg=family_vault.stderr)
+        family_vault_id = family_vault.stdout.strip().splitlines()[0].split(": ", 1)[1]
+
+        travel_vault = self._run_cli("vault", "create", "Travel")
+        self.assertEqual(travel_vault.returncode, 0, msg=travel_vault.stderr)
+        travel_vault_id = travel_vault.stdout.strip().splitlines()[0].split(": ", 1)[1]
+
+        family_memory = self._run_cli(
+            "memory",
+            "create",
+            "--vault",
+            family_vault_id,
+            input_text="Morning walk\nI noticed the cold air and the empty street.\n",
+        )
+        self.assertEqual(family_memory.returncode, 0, msg=family_memory.stderr)
+        family_memory_id = family_memory.stdout.strip().splitlines()[0].split(": ", 1)[1]
+
+        travel_memory = self._run_cli(
+            "memory",
+            "create",
+            "--vault",
+            travel_vault_id,
+            input_text="Train arrival\nI stepped off the train just after sunrise.\n",
+        )
+        self.assertEqual(travel_memory.returncode, 0, msg=travel_memory.stderr)
+        travel_memory_id = travel_memory.stdout.strip().splitlines()[0].split(": ", 1)[1]
+
+        family_revision = self._run_cli(
+            "memory",
+            "revise",
+            family_memory_id,
+            input_text="Morning walk\nLater I remembered how quiet the block felt.\n",
+        )
+        self.assertEqual(family_revision.returncode, 0, msg=family_revision.stderr)
+
+        listed_memories = self._run_cli("memory", "list")
+        self.assertEqual(listed_memories.returncode, 0, msg=listed_memories.stderr)
+        listed_memory_lines = listed_memories.stdout.strip().splitlines()
+        self.assertEqual(len(listed_memory_lines), 2)
+        self.assertTrue(any(f"memory_id: {family_memory_id}" in line for line in listed_memory_lines))
+        self.assertTrue(any("title: Morning walk" in line for line in listed_memory_lines))
+        self.assertTrue(any(f"vault_id: {family_vault_id}" in line for line in listed_memory_lines))
+        self.assertTrue(any("vault_name: Family" in line for line in listed_memory_lines))
+        self.assertTrue(any(f"memory_id: {travel_memory_id}" in line for line in listed_memory_lines))
+        self.assertTrue(any("title: Train arrival" in line for line in listed_memory_lines))
+        self.assertTrue(any(f"vault_id: {travel_vault_id}" in line for line in listed_memory_lines))
+        self.assertTrue(any("vault_name: Travel" in line for line in listed_memory_lines))
+
+        family_list = self._run_cli("memory", "list", "--vault", family_vault_id)
+        self.assertEqual(family_list.returncode, 0, msg=family_list.stderr)
+        family_list_lines = family_list.stdout.strip().splitlines()
+        self.assertEqual(len(family_list_lines), 1)
+        self.assertIn(f"memory_id: {family_memory_id}", family_list_lines[0])
+        self.assertIn("title: Morning walk", family_list_lines[0])
+        self.assertIn(f"vault_id: {family_vault_id}", family_list_lines[0])
+        self.assertIn("vault_name: Family", family_list_lines[0])
+
+        travel_list = self._run_cli("memory", "list", "--vault", travel_vault_id)
+        self.assertEqual(travel_list.returncode, 0, msg=travel_list.stderr)
+        travel_list_lines = travel_list.stdout.strip().splitlines()
+        self.assertEqual(len(travel_list_lines), 1)
+        self.assertIn(f"memory_id: {travel_memory_id}", travel_list_lines[0])
+        self.assertIn("title: Train arrival", travel_list_lines[0])
+        self.assertIn(f"vault_id: {travel_vault_id}", travel_list_lines[0])
+        self.assertIn("vault_name: Travel", travel_list_lines[0])
+
+        missing_vault = self._run_cli("memory", "list", "--vault", "vault-missing")
+        self.assertEqual(missing_vault.returncode, 1)
+        self.assertIn("vault not found: vault-missing", missing_vault.stderr)
+
     def test_cli_requires_initialized_personal_profile(self) -> None:
         result = self._run_cli("vault", "list")
 

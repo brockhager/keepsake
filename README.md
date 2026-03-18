@@ -49,7 +49,7 @@ Features will be added slowly and intentionally.
 - [v0 SQLite Migrations](db/migrations/README.md)
 - [Demo Seed Data](db/seeds/README.md)
 
-## Phase 1 CLI
+## CLI
 
 Initialize the personal profile before using the CLI:
 
@@ -57,13 +57,14 @@ Initialize the personal profile before using the CLI:
 pwsh .\scripts\init-runtime-profile.ps1 -RuntimeMode personal
 ```
 
-The implemented Phase 1 command tree is:
+The current command tree is:
 
 ```text
 keepsake vault create <name>
 keepsake vault list
 keepsake memory create --vault <vault_id>
 keepsake memory revise <memory_id>
+keepsake memory list [--vault <vault_id>]
 keepsake memory show <memory_id>
 keepsake memory history <memory_id>
 ```
@@ -71,6 +72,9 @@ keepsake memory history <memory_id>
 Within this repository, invoke it as `python -m keepsake ...`.
 
 For the two write commands, memory content is read from stdin. The first non-empty line is stored as the revision title so Phase 1 can stay inside the existing service-layer shape without adding separate metadata prompts.
+
+`keepsake memory list` is read-only. It can list all memories or narrow recall to one explicit vault with `--vault <vault_id>`.
+
 
 ## License
 
